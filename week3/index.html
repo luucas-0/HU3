@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor de Notas</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .nota-item { margin-bottom: 5px; display: flex; gap: 10px; align-items: center; }
+        button.delete { color: red; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Notas Rápidas</h2>
+    <p>Escribe algo y presiona "Agregar" para guardarlo.</p>
+
+    <div>
+        <input type="text" id="inputNota" placeholder="Escribe una nota...">
+        <button id="btnAgregar">Agregar</button>
+    </div>
+
+    <ul id="listaNotas"></ul>
+
+    <script src="manipulacion_dom.js"></script>
+</body>
+</html>
