@@ -1,54 +1,45 @@
-/**
- * PROYECTO FINAL - MÓDULO 3
- * Estudiante: Coder
- * Tecnologías: DOM, LocalStorage, Fetch API (CRUD), JSON Server
- */
-
-// 1. Configuración y Referencias
 const API_URL = 'http://localhost:3000/tareas';
 const inputTarea = document.getElementById('inputTarea');
 const btnAgregar = document.getElementById('btnAgregar');
 const btnSincronizar = document.getElementById('btnSincronizar');
 const listaTareasUI = document.getElementById('listaTareas');
 
-// Estructura de datos global
+// aquí guardamos la lista de tareas para tenerlas a mano
 let tareas = [];
 
-// ==========================================
-// PERSISTENCIA: Cargar datos al iniciar
-// ==========================================
 window.addEventListener('DOMContentLoaded', () => {
     const storage = localStorage.getItem('tareas_cache');
     if (storage) {
+        // si ya teníamos tareas guardadas en el navegador, las sacamos del "baúl"
         tareas = JSON.parse(storage);
         renderizarDOM();
-        console.log("INFO: Datos recuperados de LocalStorage");
+        console.log("info: datos recuperados de localstorage");
     }
-    // Opcional: Sincronizar con el servidor automáticamente al cargar
+    // intentamos ver qué hay en el servidor apenas abre la página
     obtenerDatosServidor();
 });
 
-// ==========================================
-// FETCH API: Operaciones CRUD
-// ==========================================
+//
+// fetch api: operaciones para hablar con el servidor
+//
 
-// GET - Obtener datos
+// get - traer los datos del servidor
 async function obtenerDatosServidor() {
     try {
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error("No se pudo conectar al servidor");
         const datosServidor = await res.json();
         
-        // Sincronizamos: lo que diga el servidor es la verdad absoluta
+        // lo que diga el servidor manda, así que actualizamos nuestra lista
         tareas = datosServidor;
         actualizarCacheYDOM();
-        console.log("GET: Datos sincronizados desde JSON Server", datosServidor);
+        console.log("get: datos sincronizados desde json server", datosServidor);
     } catch (err) {
-        console.error("ERROR GET:", err.message);
+        console.error("error get:", err.message);
     }
 }
 
-// POST - Crear dato
+// post - mandarle una tarea nueva al servidor para que la guarde
 async function postServidor(nuevaTarea) {
     try {
         const res = await fetch(API_URL, {
@@ -57,61 +48,65 @@ async function postServidor(nuevaTarea) {
             body: JSON.stringify(nuevaTarea)
         });
         const data = await res.json();
-        console.log("POST: Guardado en db.json", data);
+        console.log("post: guardado en db.json", data);
     } catch (err) {
-        console.error("ERROR POST:", err);
+        console.error("error post:", err);
     }
 }
 
-// DELETE - Eliminar dato
+// delete - decirle al servidor que borre una tarea específica
 async function deleteServidor(id) {
     try {
         const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if (res.ok) console.log(`DELETE: ID ${id} eliminado del servidor`);
+        if (res.ok) console.log(`delete: id ${id} eliminado del servidor`);
     } catch (err) {
-        console.error("ERROR DELETE:", err);
+        console.error("error delete:", err);
     }
 }
 
-// ==========================================
-// DOM & INTERACCIÓN
-// ==========================================
+//
+// dom & interacción: lo que el usuario ve y hace
+//
 
 btnAgregar.addEventListener('click', () => {
     const texto = inputTarea.value.trim();
 
-    // Validación
+    // revisamos que no nos manden algo vacío
     if (!texto) {
-        console.error("VALIDACIÓN: El campo está vacío");
+        console.error("validación: el campo está vacío");
         alert("Escribe una tarea válida");
         return;
     }
 
-    // Crear objeto (usamos string para el ID para compatibilidad con JSON Server)
+    // creamos la tarea con un id único basado en el tiempo
     const nuevaTarea = {
         id: Date.now().toString(),
         texto: texto
     };
 
-    // Actualizar Local
+    // la metemos en nuestra lista local primero para que sea rápido
     tareas.push(nuevaTarea);
     actualizarCacheYDOM();
     
-    // Sincronizar Servidor
+    // avisamos al servidor que hay algo nuevo
     postServidor(nuevaTarea);
 
+    // limpiamos el input para la siguiente tarea
     inputTarea.value = "";
     inputTarea.focus();
 });
 
+// botón manual por si queremos forzar la actualización
 btnSincronizar.addEventListener('click', obtenerDatosServidor);
 
 function actualizarCacheYDOM() {
+    // guardamos una copia en el navegador por si se va la luz o el internet
     localStorage.setItem('tareas_cache', JSON.stringify(tareas));
     renderizarDOM();
 }
 
 function renderizarDOM() {
+    // limpiamos la lista antes de dibujar todo otra vez
     listaTareasUI.innerHTML = "";
     
     tareas.forEach(t => {
@@ -123,10 +118,10 @@ function renderizarDOM() {
         btnBorrar.className = "btn-delete";
         
         btnBorrar.onclick = () => {
-            // Filtramos el arreglo local
+            // quitamos la tarea de nuestra lista actual
             tareas = tareas.filter(item => item.id !== t.id);
             actualizarCacheYDOM();
-            // Borramos en servidor
+            // y le decimos al servidor que también la borre de allá
             deleteServidor(t.id);
         };
 
